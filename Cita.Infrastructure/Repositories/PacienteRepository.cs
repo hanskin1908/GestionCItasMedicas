@@ -1,6 +1,6 @@
 ﻿
 using Citas.Domain.Interfaces;
-using Citas.Domain.ValueObjects;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;

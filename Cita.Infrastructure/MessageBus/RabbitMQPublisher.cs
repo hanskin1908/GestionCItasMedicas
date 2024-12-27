@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Text;
+using System.Threading;
 namespace Cita.Infrastructure.MessageBus
 {
     public class RabbitMQService : IDisposable
@@ -24,8 +25,8 @@ namespace Cita.Infrastructure.MessageBus
                 Password = password
             };
 
-            _connection = (IConnection)factory.CreateConnectionAsync();
-            _channel = _connection.CreateModel();
+            _connection = factory.CreateConnection();
+          _channel   = _connection.CreateModel();
 
             // Configurar exchange
             _channel.ExchangeDeclare(
@@ -35,7 +36,7 @@ namespace Cita.Infrastructure.MessageBus
                 autoDelete: false);
         }
 
-        public void PublicarMensaje<T>(T mensaje)
+        public async void PublicarMensaje<T>(T mensaje)
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(RabbitMQService));
@@ -45,12 +46,13 @@ namespace Cita.Infrastructure.MessageBus
 
             var properties = _channel.CreateBasicProperties();
             properties.Persistent = true;
-
-            _channel.BasicPublish(
-                exchange: ExchangeName,
-                routingKey: RoutingKey,
-                basicProperties: properties,
-                body: body);
+             _channel.BasicPublish(
+                    exchange: ExchangeName,
+          routingKey: "cita.finalizada",
+          mandatory: false,  // No requerimos confirmación de enrutamiento
+          basicProperties: properties,
+          body: body
+                );
         }
 
         public void Dispose()

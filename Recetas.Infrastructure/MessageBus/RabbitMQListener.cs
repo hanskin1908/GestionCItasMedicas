@@ -3,9 +3,10 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Recetas.Infrastructure.MessageBus
 {
@@ -17,13 +18,13 @@ namespace Recetas.Infrastructure.MessageBus
         public void Listen()
         {
             var factory = new ConnectionFactory { HostName = _hostName };
-            var connection = factory.CreateConnectionAsync();
-            var channel = connection.CreateModel();
+            var connection = (IConnection)factory.CreateConnectionAsync();
+            var channel = (IChannel)connection.CreateChannelAsync();
 
-            channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+            channel.QueueDeclareAsync(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
 
             var consumer = new AsyncEventingBasicConsumer(channel);
-            consumer.ReceivedAsync += (model, ea) =>
+            consumer.ReceivedAsync += async (model, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = System.Text.Encoding.UTF8.GetString(body);
@@ -33,7 +34,7 @@ namespace Recetas.Infrastructure.MessageBus
                 // Aquí se implementaría la creación de la receta en base a los datos de la cita.
             };
 
-            channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
+            channel.BasicConsumeAsync(queue: _queueName, autoAck: true, consumer: consumer);
         }
     }
 }
