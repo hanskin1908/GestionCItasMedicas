@@ -16,5 +16,6 @@ namespace Personas.Application
         public string NumeroDocumento { get; set; }
         public string TipoPersona { get; set; }
         public string Especialidad { get; set; }
+    
     }
 }

@@ -14,5 +14,6 @@ namespace Recetas.Application.Commands
         public int PacienteId { get; set; } // ID del paciente
         public string Descripcion { get; set; } // Detalles de la receta
         public string Estado { get; set; } = "Activa"; // Estado inicial
+        public DateTime FechaCreacion {get;set;}
     }
 }

@@ -15,6 +15,8 @@ namespace Recetas.Application.Queries
     {
         private readonly IRecetaRepository _repository;
         private readonly IMapper _mapper;
+     
+        
 
         public GetRecetaByCodigoQueryHandler(IRecetaRepository repository, IMapper mapper)
         {
