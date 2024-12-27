@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="EntityFramework" Version="6.5.1" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Personas.API\Personas.API.csproj" />
+    <ProjectReference Include="..\Cita.Infrastructure\Citas.Infrastructure.csproj" />
+    <ProjectReference Include="..\Citas.APi\Citas.APi.csproj" />
+    <ProjectReference Include="..\Citas.Application\Citas.Application.csproj" />
+    <ProjectReference Include="..\Citas.Domain\Citas.Domain.csproj" />
+    <ProjectReference Include="..\Personas.Application\Personas.Application.csproj" />
+    <ProjectReference Include="..\Personas.Dominio\Personas.Dominio.csproj" />
+    <ProjectReference Include="..\Personas.Infrastructure\Personas.Infrastructure.csproj" />
+    <ProjectReference Include="..\Recetas.Api\Recetas.Api.csproj" />
+    <ProjectReference Include="..\Recetas.Application\Recetas.Application.csproj" />
+    <ProjectReference Include="..\Recetas.Domain\Recetas.Domain.csproj" />
+    <ProjectReference Include="..\Recetas.Infrastructure\Recetas.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

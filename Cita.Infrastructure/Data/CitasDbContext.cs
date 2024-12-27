@@ -14,7 +14,9 @@ namespace Citas.Infrastructure.Data
 {
     public class CitasDbContext : DbContext
     {
-        public CitasDbContext() : base("CitasConnection") { }
+        public CitasDbContext() : base("CitasConnection") {
+            Database.SetInitializer<CitasDbContext>(null);
+        }
 
         public DbSet<Citas.Domain.Entities.Cita> Citas { get; set; }
 

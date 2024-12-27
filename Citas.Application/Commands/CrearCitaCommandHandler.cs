@@ -17,6 +17,10 @@ namespace Citas.Application.Commands
         private readonly ICitaRepository _repository;
         private readonly IMapper _mapper;
 
+        public CreateCitaCommandHandler()
+        {
+        }
+
         public CreateCitaCommandHandler(ICitaRepository repository, IMapper mapper)
         {
             _repository = repository;

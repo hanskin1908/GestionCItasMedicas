@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 namespace Cita.Infrastructure.MessageBus
 {
-    public class RabbitMQService : IDisposable
+    public class RabbitMQPublisher : IDisposable
     {
         private readonly IConnection _connection;
         private readonly IModel _channel;
@@ -16,7 +16,7 @@ namespace Cita.Infrastructure.MessageBus
         private const string RoutingKey = "cita.finalizada";
         private bool _disposed;
 
-        public RabbitMQService(string hostName, string userName, string password)
+        public RabbitMQPublisher(string hostName, string userName, string password)
         {
             var factory = new ConnectionFactory
             {
@@ -39,7 +39,7 @@ namespace Cita.Infrastructure.MessageBus
         public async void PublicarMensaje<T>(T mensaje)
         {
             if (_disposed)
-                throw new ObjectDisposedException(nameof(RabbitMQService));
+                throw new ObjectDisposedException(nameof(RabbitMQPublisher));
 
             var json = JsonConvert.SerializeObject(mensaje);
             var body = Encoding.UTF8.GetBytes(json);
@@ -75,7 +75,7 @@ namespace Cita.Infrastructure.MessageBus
             _disposed = true;
         }
 
-        ~RabbitMQService()
+        ~RabbitMQPublisher()
         {
             Dispose(false);
         }

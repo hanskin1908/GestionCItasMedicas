@@ -49,5 +49,10 @@ namespace Recetas.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task GetAllAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

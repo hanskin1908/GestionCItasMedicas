@@ -17,6 +17,10 @@ namespace Citas.Application.Queries
         private readonly ICitaRepository _repository;
         private readonly IMapper _mapper;
 
+        public GetCitaByIdQueryHandler()
+        {
+        }
+
         public GetCitaByIdQueryHandler(ICitaRepository repository, IMapper mapper)
         {
             _repository = repository;

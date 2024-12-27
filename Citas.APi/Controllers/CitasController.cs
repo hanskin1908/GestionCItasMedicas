@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using Cita.Infrastructure.MessageBus;
+using Cita.Infrastructure.Repositories;
+using Citas.Application;
 using Citas.Application.Commands;
 using Citas.Application.DTOs;
 using Citas.Application.Queries;
+using Citas.Domain.Interfaces;
+using Citas.Infrastructure.Data;
 using MediatR;
-
-
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,61 +21,91 @@ using HttpPostAttribute = System.Web.Http.HttpPostAttribute;
 
 namespace Citas.APi.Controllers
 {
- 
- 
-        [RoutePrefix("api/citas")]
-        public class CitasController : ApiController
+
+    [RoutePrefix("api/citas")]
+    public class CitasController : ApiController
+    {
+        private readonly IMediator _mediator;
+        private readonly RabbitMQPublisher _messageBus;
+
+        public CitasController(IMediator @object)
         {
-            private readonly IMediator _mediator;
-            private readonly IRabbitMQPublisher _messageBus;
+            var services = new ServiceCollection();
 
-            public CitasController(IMediator mediator, IRabbitMQPublisher messageBus)
+            // Configuración de AutoMapper
+            var mappingConfig = new MapperConfiguration(cfg =>
             {
-                _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-                _messageBus = messageBus ?? throw new ArgumentNullException(nameof(messageBus));
-            }
+                cfg.AddProfile<MappingProfile>();
+            });
+            IMapper mapper = mappingConfig.CreateMapper();
+            services.AddSingleton(mapper);
 
-            // Obtener cita por ID
-            [HttpGet]
-            [Route("{id:int}")]
-            public async Task<IHttpActionResult> GetById(int id)
+            // Registro de dependencias core
+            services.AddTransient<ICitaRepository, CitaRepository>();
+            services.AddTransient<CitasDbContext>();
+
+            // Registro de handlers de MediatR
+            services.AddTransient<IRequestHandler<CreateCitaCommand, CitaDto>, CreateCitaCommandHandler>();
+
+            // Registro de MediatR
+            services.AddMediatR(cfg => {
+                cfg.RegisterServicesFromAssemblies(
+                    typeof(CreateCitaCommand).Assembly
+                );
+            });
+
+            // Configuración de RabbitMQ
+            var hostname = "localhost";
+            var username = "guest";
+            var password = "guest";
+            _messageBus = new RabbitMQPublisher(hostname, username, password);
+
+            // Construcción del contenedor
+            var serviceProvider = services.BuildServiceProvider();
+            _mediator = serviceProvider.GetRequiredService<IMediator>();
+        }
+
+        // Obtener cita por ID
+        [HttpGet]
+        [Route("{id:int}")]
+        public async Task<IHttpActionResult> GetById(int id)
+        {
+            var query = new GetCitaByIdQuery { Id = id };
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        // Crear cita
+        [HttpPost]
+        [Route("")]
+        public async Task<IHttpActionResult> Create([FromBody] CreateCitaCommand command)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _mediator.Send(command);
+            return Created($"api/citas/{result.Id}", result);
+        }
+
+        // Finalizar cita y notificar receta
+        [HttpPut]
+        [Route("{id:int}/finalizar")]
+        public async Task<IHttpActionResult> Finalize(int id)
+        {
+            try
             {
                 var query = new GetCitaByIdQuery { Id = id };
-                var result = await _mediator.Send(query);
+                var cita = await _mediator.Send(query);
 
-                if (result == null)
+                if (cita == null)
                     return NotFound();
 
-                return Ok(result);
-            }
+                cita.Estado = "Finalizada";
 
-            // Crear cita
-            [HttpPost]
-            [Route("")]
-            public async Task<IHttpActionResult> Create([FromBody] CreateCitaCommand command)
-            {
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-
-                var result = await _mediator.Send(command);
-                return Created($"api/citas/{result.Id}", result);
-            }
-
-            // Finalizar cita y notificar receta
-            [HttpPut]
-            [Route("{id:int}/finalizar")]
-            public async Task<IHttpActionResult> Finalize(int id)
-            {
-                try
-                {
-                    // Simulación de finalización de cita
-                    var query = new GetCitaByIdQuery { Id = id };
-                    var cita = await _mediator.Send(query);
-
-                    if (cita == null)
-                        return NotFound();
-
-                    cita.Estado = "Finalizada";
                 var mensaje = new
                 {
                     IdCita = cita.Id,
@@ -81,31 +114,33 @@ namespace Citas.APi.Controllers
                     Estado = cita.Estado,
                     FechaFinalizacion = DateTime.UtcNow
                 };
+
                 // Publicar mensaje en RabbitMQ
-                _messageBus.PublicarMensaje(mensaje, "cita.finalizada");
+                _messageBus.PublicarMensaje( "cita.finalizada");
 
                 return Ok($"Cita con ID {id} finalizada y notificada.");
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
             }
-
-            // Eliminar cita
-            [HttpDelete]
-            [Route("{id:int}")]
-            public async Task<IHttpActionResult> Delete(int id)
+            catch (Exception ex)
             {
-                try
-                {
-                    // Aquí se implementaría la eliminación de la cita.
-                    return Ok($"Cita con ID {id} eliminada correctamente.");
-                }
-                catch (Exception ex)
-                {
-                    return InternalServerError(ex);
-                }
+                return InternalServerError(ex);
+            }
+        }
+
+        // Eliminar cita
+        [HttpDelete]
+        [Route("{id:int}")]
+        public async Task<IHttpActionResult> Delete(int id)
+        {
+            try
+            {
+                // Aquí se implementaría la lógica para eliminar la cita
+                return Ok($"Cita con ID {id} eliminada correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return InternalServerError(ex);
             }
         }
     }
+}
+    
